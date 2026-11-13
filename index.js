@@ -50,9 +50,32 @@ app.post('/jobs', async (req, res) => {
   res.send(result)
 })
 
-//display all data from jobs collection
+//display all or query filtered data from jobs collection
 app.get('/jobs', async (req, res) => {
-  const cursor = jobs.find();
+  const query={};
+  console.log("query", req.query);
+  if(req.query){
+    //this will match only specific filter
+    if(req.query.jobType){
+      query.jobType = req.query.jobType
+    }
+    if(req.query.isRemote){
+      query.isRemote=req.query.isRemote===true;
+    }
+    if(req.query.category){
+      query.category= req.query.category;
+    }
+    //this will match title, responsibilities, requirements with the searched text
+    if(req.query.search){
+      query.$or=[
+        //regex is reqular expression search, i is to ignore case sensitivity
+        {title:{$regex:req.query.search, $options: 'i'}},
+        {responsibilities: {$regex:req.query.search, $options: 'i'}},
+        {requirements: {$regex:req.query.search, $options: 'i'}}
+      ];
+    }
+  }
+  const cursor = jobs.find(query);
   const result = await cursor.toArray();
   res.send(result)
 })
