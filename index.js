@@ -80,6 +80,16 @@ app.get('/jobs', async (req, res) => {
   res.send(result)
 })
 
+
+//show dynamic job from jobs collection
+app.get('/jobs/:id', async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await jobs.findOne(query);
+  res.send(result)
+})
+
+
 //delete data from jobs collection
 app.delete('/jobs/:id', async (req, res) => {
   const id = req.params.id;
