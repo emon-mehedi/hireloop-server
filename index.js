@@ -31,6 +31,7 @@ const connectedClient = await connectToMongodb();
 const db = connectedClient.db('hireloopdb');
 const users = db.collection('user');
 const jobs = db.collection('jobs')
+const applications = db.collection('applications')
 
 
 //jwk
@@ -98,6 +99,34 @@ app.delete('/jobs/:id', async (req, res) => {
   res.send(result)
 })
 
+//get data of specific job seeker from applications collection
+app.get('/applications',async(req,res)=>{
+  const query= {};
+  if (req.query.applicantId){
+    query.userId = req.query.applicantId
+  }
+  const cursor = applications.find(query);
+  const result = await cursor.toArray();
+  res.send(result)
+})
+
+
+//add data to applications collection
+app.post('/applications', async(req,res)=>{
+  const application = req.body;
+  const alreadyExists = await applications.findOne({
+    userId: application.userId,
+    email: application.email,
+    jobTitle: application.jobTitle,
+    companyName: application.companyName
+  });
+  if (alreadyExists){
+    return res.status(400).send({message:"You already appllied this job"})
+  } else {
+    const result = await applications.insertOne(application);
+    res.send(result)
+  }
+})
 
 
 //homepage of backend
