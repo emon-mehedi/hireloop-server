@@ -111,6 +111,17 @@ app.get('/applications',async(req,res)=>{
 })
 
 
+//get total count of applications of a specific job seeker from applications collection
+app.get('/applications/count',async(req,res)=>{
+  const query= {};
+  if (req.query.applicantId){
+    query.userId = req.query.applicantId
+  }
+  const result = await applications.countDocuments(query);
+  res.send({count:result})
+})
+
+
 //add data to applications collection
 app.post('/applications', async(req,res)=>{
   const application = req.body;
