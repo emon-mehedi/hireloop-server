@@ -146,6 +146,10 @@ app.post('/applications', async(req,res)=>{
 // payments related apis
 app.post('/payments/checkout-verify', async (req, res) => {
     const { sessionId } = req.body;
+
+    if(!sessionId){
+      return rs.send({success: false, message:'Session ID is required'})
+    }
     const {
         status,
         payment_status,
@@ -159,6 +163,13 @@ app.post('/payments/checkout-verify', async (req, res) => {
     //3. insert sessionId into the payment collection
     //4. update user information as premium user
     if (status === 'complete' && payment_status === 'paid') {
+
+      const sessionQuery = {sessionId};
+      const existingPayment = await payments.findOne(sessionQuery);
+      if(existingPayment){
+        return res.send({success: false, message: 'Payment already verified'})
+      }
+
         const payment = {
             sessionId,
             status,
