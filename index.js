@@ -200,6 +200,14 @@ app.post('/payments/checkout-verify', async (req, res) => {
     res.send({ success: false, message: 'Payment verification failed' });
 })
 
+app.get('/users/:id/premium', async(req,res)=>{
+  const id = req.params.id;
+  const query = new ObjectId(id);
+  //project bring only that specific info. 1 means true
+  const result = await users.findOne(query,{projection: {premium : 1}});
+  res.send(result)
+})
+
 //homepage of backend
 app.get('/', (req, res) => {
   res.send("Welcome to the backend of Hireloop")
