@@ -202,7 +202,7 @@ app.post('/payments/checkout-verify', async (req, res) => {
 
 app.get('/users/:id/premium', async(req,res)=>{
   const id = req.params.id;
-  const query = new ObjectId(id);
+  const query = { _id: new ObjectId(id) }
   //project bring only that specific info. 1 means true
   const result = await users.findOne(query,{projection: {premium : 1}});
   res.send(result)
