@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import { MongoClient, ObjectId } from "mongodb";
 import "dotenv/config";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 6000
@@ -32,6 +35,7 @@ const db = connectedClient.db('hireloopdb');
 const users = db.collection('user');
 const jobs = db.collection('jobs')
 const applications = db.collection('applications')
+const payments = db.collection('payments')
 
 
 //jwk
@@ -139,6 +143,51 @@ app.post('/applications', async(req,res)=>{
   }
 })
 
+// payments related apis
+app.post('/payments/checkout-verify', async (req, res) => {
+    const { sessionId } = req.body;
+    const {
+        status,
+        payment_status,
+        customer_email,
+        metadata,
+        payment_intent,
+    } = await stripe.checkout.sessions.retrieve(sessionId);
+
+    //1. is  new session used?
+    //2. is the session id for the currently logged in user?
+    //3. insert sessionId into the payment collection
+    //4. update user information as premium user
+    if (status === 'complete' && payment_status === 'paid') {
+        const payment = {
+            sessionId,
+            status,
+            payment_status,
+            customer_email,
+            userId: metadata.userId,
+            payment_date: new Date(),
+            payment_intent,
+        }
+
+        const result = await payments.insertOne(payment);
+
+        // update the user table
+        const query = { _id: new ObjectId(metadata.userId) };
+
+        const updatedDoc = {
+            $set: {
+                premium: true,
+            }
+        }
+        const updateResult = await users.updateOne(
+            query,
+            updatedDoc
+        );
+        res.send({ success: true, result, updateResult });
+        return
+    }
+    res.send({ success: false, message: 'Payment verification failed' });
+})
 
 //homepage of backend
 app.get('/', (req, res) => {
