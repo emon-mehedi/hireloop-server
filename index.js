@@ -70,6 +70,10 @@ app.get('/jobs', async (req, res) => {
     if(req.query.category){
       query.category= req.query.category;
     }
+    //this will show self created jobs of a recruiter
+    if(req.query.recruiterId){
+      query.recruiterId= req.query.recruiterId
+    }
     //this will match title, responsibilities, requirements with the searched text
     if(req.query.search){
       query.$or=[
