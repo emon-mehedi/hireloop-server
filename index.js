@@ -230,6 +230,20 @@ app.get('/users/:id/premium', async(req,res)=>{
   res.send(result)
 })
 
+
+//admin changinig roles of other users
+app.patch('/users/:id/role',async(req, res)=>{
+  const id = req.params.id;
+  const query = {_id: new ObjectId(id)};
+  const updatedDoc = {
+    $set: {
+      role : req.body.role
+    }
+  }
+  const result = await users.updateOne(query, updatedDoc)
+  res.send(result)
+})
+
 //homepage of backend
 app.get('/', (req, res) => {
   res.send("Welcome to the backend of Hireloop")
