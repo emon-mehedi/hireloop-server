@@ -107,11 +107,16 @@ app.delete('/jobs/:id', async (req, res) => {
   res.send(result)
 })
 
-//get data of specific job seeker from applications collection
+//get data of specific job seeker from applications collection or data of all applications on one job
 app.get('/applications',async(req,res)=>{
   const query= {};
+  //find all applications of a job seeker
   if (req.query.applicantId){
     query.userId = req.query.applicantId
+  }
+  //find all applications on a job of a recruiter
+  if(req.query.jobId){
+    query.jobId = req.query.jobId
   }
   const cursor = applications.find(query);
   const result = await cursor.toArray();
