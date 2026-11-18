@@ -39,7 +39,19 @@ const payments = db.collection('payments')
 
 
 //jwk
-
+const verifyToken = (req, res, next)=>{
+  const authHeader = req.headers.authorization;
+  if(!authHeader){
+    res.send({status:401, message: 'Unauthorized'});
+    return
+  }
+  const token = authHeader.split(" ")[1];
+  if(!token){
+    res.send({status:401, message: 'Unauthorized'});
+    return
+  }
+  next()
+}
 
 //users
 app.get('/users', async (req, res) => {
@@ -108,7 +120,8 @@ app.delete('/jobs/:id', async (req, res) => {
 })
 
 //get data of specific job seeker from applications collection or data of all applications on one job
-app.get('/applications',async(req,res)=>{
+app.get('/applications',verifyToken, async(req,res)=>{
+  console.log("headers on the server:", req.headers);
   const query= {};
   //find all applications of a job seeker
   if (req.query.applicantId){
