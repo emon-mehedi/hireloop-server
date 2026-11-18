@@ -73,6 +73,24 @@ const verifyToken = async(req, res, next)=>{
   next()
 }
 
+//verify if user role is seeker (must call verifyToken before this)
+const verifySeeker = async(req, res, next)=>{
+  if(req.user.role !=='seeker'){
+    res.status(403).send({message: 'Forbidden'});
+    return
+  }
+  next()
+}
+
+//verify if user role is recruiter (must call verifyToken before this)
+const verifyRecruiter = async(req, res, next)=>{
+  if(req.user.role !=='recruiter'){
+    res.status(403).send({message: 'Forbidden'});
+    return
+  }
+  next()
+}
+
 //users
 app.get('/users', async (req, res) => {
   const querry = await users.find({}).toArray();
@@ -81,7 +99,7 @@ app.get('/users', async (req, res) => {
 
 
 //add new data to jobs collection
-app.post('/jobs', async (req, res) => {
+app.post('/jobs',verifyToken, verifyRecruiter, async (req, res) => {
   const newJob = req.body;
   const result = await jobs.insertOne(newJob);
   res.send(result)
@@ -177,7 +195,7 @@ app.get('/applications/count',async(req,res)=>{
 
 
 //add data to applications collection
-app.post('/applications', async(req,res)=>{
+app.post('/applications',verifyToken,verifySeeker, async(req,res)=>{
   const application = req.body;
   const alreadyExists = await applications.findOne({
     userId: application.userId,
