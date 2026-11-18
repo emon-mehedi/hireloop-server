@@ -149,11 +149,11 @@ app.get('/applications',verifyToken, async(req,res)=>{
   }
   //find all applications on a job of a recruiter
   if(req.query.jobId){
-    
+
     //verify is current user is the creator of the job
     const jobQuery = {_id: new ObjectId(req.query.jobId)};
     const job = await jobs.findOne(jobQuery);
-    if (job.recruiterId !== req.user._id.toString()){
+    if (job.recruiterId !== req.user._id.toString() && req.user.role !=='admin'){
       res.status(403).send({message: "Forbidden"});
       return
     }
