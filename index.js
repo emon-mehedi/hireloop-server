@@ -33,13 +33,14 @@ const connectedClient = await connectToMongodb();
 //creating database and collections in mongodb
 const db = connectedClient.db('hireloopdb');
 const users = db.collection('user');
+const sessions = db.collection('session');
 const jobs = db.collection('jobs')
 const applications = db.collection('applications')
 const payments = db.collection('payments')
 
 
 //jwk
-const verifyToken = (req, res, next)=>{
+const verifyToken = async(req, res, next)=>{
   const authHeader = req.headers.authorization;
   if(!authHeader){
     res.send({status:401, message: 'Unauthorized'});
@@ -47,9 +48,28 @@ const verifyToken = (req, res, next)=>{
   }
   const token = authHeader.split(" ")[1];
   if(!token){
-    res.send({status:401, message: 'Unauthorized'});
+    res.status(401).send({message: 'Unauthorized'});
     return
   }
+
+  //verify if token is valid
+  const query = {token};
+  const session = await sessions.findOne(query);
+  if(!session){
+    res.status(401).send({message: "Unauthorized"});
+    return
+  }
+
+  //verify if user exists
+  const userId = session.userId;
+  const userQuery = {_id: new ObjectId(userId)};
+  const user = await users.findOne(userQuery);
+  if(!user){
+    res.status(401).send({message: "Unauthorized"});
+    return
+  }
+  req.user = user
+
   next()
 }
 
@@ -129,6 +149,14 @@ app.get('/applications',verifyToken, async(req,res)=>{
   }
   //find all applications on a job of a recruiter
   if(req.query.jobId){
+    
+    //verify is current user is the creator of the job
+    const jobQuery = {_id: new ObjectId(req.query.jobId)};
+    const job = await jobs.findOne(jobQuery);
+    if (job.recruiterId !== req.user._id.toString()){
+      res.status(403).send({message: "Forbidden"});
+      return
+    }
     query.jobId = req.query.jobId
   }
   const cursor = applications.find(query);
