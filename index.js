@@ -91,6 +91,15 @@ const verifyRecruiter = async(req, res, next)=>{
   next()
 }
 
+//verify if user role is admin
+const verifyAdmin = async(req, res, next)=>{
+  if(req.user.role !=='admin'){
+    res.status(403).send({message: 'Forbidden'});
+    return
+  }
+  next()
+}
+
 //users
 app.get('/users', async (req, res) => {
   const querry = await users.find({}).toArray();
@@ -291,7 +300,7 @@ app.get('/users/:id/premium', async(req,res)=>{
 
 
 //admin changinig roles of other users
-app.patch('/users/:id/role',async(req, res)=>{
+app.patch('/users/:id/role',verifyToken, verifyAdmin, async(req, res)=>{
   const id = req.params.id;
   const query = {_id: new ObjectId(id)};
   const updatedDoc = {
